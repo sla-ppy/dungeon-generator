@@ -1,4 +1,5 @@
-int main() {
+#include <fmt/core.h>
 
-    return 69;
+int main() {
+    fmt::print("Hello, World!\n");
 }
