@@ -55,3 +55,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+# doxygen stuff
+
+docs/
