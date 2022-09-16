@@ -10,6 +10,8 @@ find_package(Boost 1.75 REQUIRED COMPONENTS system)
 set(GAME_SRCS )
 set(GAME_LIBS Boost::boost)
 
+add_subdirectory(deps/doctest)
+
 add_executable(game ${GAME_SRCS} src/main.cpp)
 target_link_libraries(game ${GAME_LIBS})
 target_compile_definitions(game PRIVATE
