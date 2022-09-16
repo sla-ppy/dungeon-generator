@@ -10,7 +10,10 @@ find_package(Boost 1.75 REQUIRED COMPONENTS system)
 add_subdirectory(deps/doctest)
 add_subdirectory(deps/fmt)
 
-set(DUN_GEN_SRCS )
+set(DUN_GEN_SRCS 
+    src/Common.h
+    src/Generation.h src/Generation.cpp
+    src/Rendering.h src/Rendering.cpp)
 set(DUN_GEN_LIBS Boost::boost doctest fmt)
 
 add_executable(dun-gen ${DUN_GEN_SRCS} src/main.cpp)
