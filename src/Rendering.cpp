@@ -42,6 +42,8 @@ Color get_color_for_tile(Tile tile) {
         return { 128, 128, 128 };
     case Tile::Door:
         return { 0, 255, 0 };
+    case Tile::NextToRoom:
+        return { 255, 165, 0 };
     default:
         l::error("unhandled tile type in get_color_for_tile: {}", int(tile));
         return { 255, 0, 0 };
