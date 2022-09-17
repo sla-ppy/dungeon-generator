@@ -17,7 +17,7 @@ int main() {
 
     const std::string output_file = "output";
 
-    err = render(grid, output_file);
+    err = render(grid, output_file, 2);
     if (err) {
         l::error("failed to render: {}\n", err.msg);
         return 1;

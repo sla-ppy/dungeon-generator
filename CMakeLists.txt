@@ -24,6 +24,11 @@ target_include_directories(dun-gen PRIVATE ${DUN_GEN_INCLUDE_DIRS})
 target_compile_definitions(dun-gen PRIVATE
     DOCTEST_CONFIG_DISABLE # removes test code
 )
+if(MSVC)
+  target_compile_options(dun-gen PRIVATE /W4 /WX)
+else()
+  target_compile_options(dun-gen PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 add_executable(dun-gen-tests ${DUN_GEN_SRCS} tests/tests_main.cpp)
 target_link_libraries(dun-gen-tests ${DUN_GEN_LIBS})

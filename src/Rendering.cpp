@@ -25,22 +25,23 @@ Color get_color_for_tile(Tile tile) {
     }
 }
 
-Error render(const Grid2D& grid, const std::string& filename) {
+Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
+    const auto width = grid.width() * scale;
+    const auto height = grid.width() * scale;
 
     std::vector<uint8_t> img;
-    img.resize(grid.width() * grid.height() * 3);
-    std::fill(img.begin(), img.end(), 128);
+    img.resize(width * height * 3);
 
-    for (size_t y = 0; y < grid.height(); ++y) {
-        for (size_t x = 0; x < grid.width(); ++x) {
-            const auto color = get_color_for_tile(grid[x][y]);
+    for (size_t y = 0; y < width; ++y) {
+        for (size_t x = 0; x < height; ++x) {
+            const auto color = get_color_for_tile(grid[x / scale][y / scale]);
             for (size_t c = 0; c < 3; ++c) {
                 img.at(x * grid.height() * 3 + y * 3 + c) = color[c];
             }
         }
     }
 
-    auto ret = stbi_write_png(fmt::format("{}.png", filename).c_str(), grid.width(), grid.height(), 3, img.data(), 0);
+    auto ret = stbi_write_png(fmt::format("{}.png", filename).c_str(), width, height, 3, img.data(), 0);
     if (ret == 0) {
         return { "failed to write image" };
     }
