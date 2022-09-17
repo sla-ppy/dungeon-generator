@@ -13,7 +13,7 @@ template<typename... Args>
 inline void info(Args&&... args) {
     fmt::print("{}    {} {} {}\n",
         fmt::styled(std::chrono::high_resolution_clock::now(), fmt::fg(fmt::color::gray)),
-        fmt::styled("INFO", fmt::fg(fmt::color::green)),
+        fmt::styled("INFO", fmt::fg(fmt::color::lime_green)),
         fmt::styled("|", fmt::fg(fmt::color::gray)),
         fmt::format(std::forward<Args>(args)...));
 }
