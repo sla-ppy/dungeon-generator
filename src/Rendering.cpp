@@ -109,10 +109,11 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
 
     l::info("opening image viewer", filename);
 
-    boost::process::spawn(fmt::format("xdg-open {}.png", filename),
+    auto child = boost::process::child(fmt::format("xdg-open {}.png", filename),
         boost::process::std_in.close(),
         boost::process::std_out > boost::process::null,
         boost::process::std_err > boost::process::null);
+    child.join();
 
     return {};
 }
