@@ -61,10 +61,16 @@ Error generate(Grid2D& grid) {
             }
         }
 
-        for (size_t y = 0; y < (pos_y + room_size); ++y) {
-            for (size_t x = 0; x < (pos_x + room_size); ++x) {
-                if (grid[x][y] == Tile::NextToRoom) {
-                    grid[x][y] = Tile::Door;
+        size_t exact { 0 };
+        size_t expected { Random::generate(1, 3) };
+        for (size_t y = starting_y; y < (starting_y + outer_size); ++y) {
+            for (size_t x = starting_x; x < (starting_x + outer_size); ++x) {
+                if (grid[x][y] == Tile::NextToRoom && exact < expected) {
+                    size_t chance { Random::generate(1, 100) };
+                    if (chance < 10) {
+                        grid[x][y] = Tile::Door;
+                        exact++;
+                    }
                 }
             }
         }
