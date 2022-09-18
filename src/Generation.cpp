@@ -4,10 +4,10 @@
 #include <random>
 
 namespace Random {
-uint16_t generate(uint16_t min, uint16_t max) {
+size_t generate(size_t min, size_t max) {
     static std::mt19937 mt { std::random_device {}() };
-    std::uniform_int_distribution set { min, max };
-    return set(mt);
+    std::uniform_int_distribution distribution { min, max };
+    return distribution(mt);
 }
 }
 
