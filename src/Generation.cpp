@@ -1,4 +1,5 @@
 #include "Generation.h"
+#include "Log.h"
 
 #include <random>
 
@@ -14,17 +15,40 @@ int rand_gen(int max) {
 
 Error generate(Grid2D& grid) {
     // TODO: when randGen is getting used twice, we need another distribution of values, as we can have multiple and will need multiple
-    // number of rooms placed depends on rng?
-
     // TODO: add diff. room sizes with rng
-    int room_size{7};
-    for (int i = 0; i < 5; ++i) {
-        int pos_x = rand_gen(grid.width() - room_size);
-        int pos_y = rand_gen(grid.height() - room_size);
+    // TODO: check if rooms overlap
+    // FIXME: make sure next to room tiles are also in bounds, forgot where we guarantee that
 
-        for (int x = pos_x; x < (pos_x + room_size); ++x) {
-            for (int y = pos_y; y < (pos_y + room_size); ++y) {
+    size_t room_size { 3 };
+    for (int i = 0; i < 5; ++i) {
+        // rand room pos
+        const size_t pos_x = rand_gen(grid.width() - room_size);
+        const size_t pos_y = rand_gen(grid.height() - room_size);
+
+        size_t starting_x = pos_x - 1;
+        size_t starting_y = pos_y - 1;
+        size_t outer_size = room_size + 2;
+
+        for (size_t y = starting_y; y < starting_y + outer_size; ++y) {
+            for (size_t x = starting_x; x < starting_x + outer_size; ++x) {
+                grid[x][y] = Tile::NextToRoom;
+            }
+        }
+
+        for (size_t y = pos_y; y < (pos_y + room_size); ++y) {
+            for (size_t x = pos_x; x < (pos_x + room_size); ++x) {
                 grid[x][y] = Tile::Room;
+            }
+        }
+
+        bool has_door = false;
+        if (has_door == false) {
+            for (size_t y = 0; y < (pos_y + room_size); ++y) {
+                for (size_t x = 0; x < (pos_x + room_size); ++x) {
+                    if (grid[x][y] == Tile::NextToRoom) {
+                        has_door = true;
+                    }
+                }
             }
         }
     }
