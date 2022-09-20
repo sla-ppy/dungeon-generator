@@ -12,6 +12,10 @@ size_t generate(size_t min, size_t max) {
 }
 
 Error generate(Grid2D& grid) {
+    // TODO: fix doors spawning on corners
+    // TODO: create corridors
+    // TODO: link corridors with doors by grouping them
+
     for (int i = 0; i < 5; ++i) {
         size_t room_size { Random::generate(2, 4) };
 
