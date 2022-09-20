@@ -4,6 +4,7 @@
 #include <chrono>
 #include <fmt/core.h>
 #include <vector>
+#include <filesystem>
 
 // set filter to box filter, which is sharp when integer-scaling
 // images later.
@@ -78,6 +79,27 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
             }
         }
     }
+
+    namespace fs = std::filesystem;
+
+    std::string tiles_path = "../assets/tiles/";
+    std::vector<std::string> filenames;
+    size_t files_amount { 0 };
+
+    // .png only file loader
+    for (auto& p : fs::directory_iterator(tiles_path)) {
+        if (fs::path(p).extension() == ".png") {
+            files_amount++;
+            filenames.push_back(fs::path(p).filename());
+            std::string loaded_file = fs::path(p).filename();
+            l::info("loading tiles: " + loaded_file, '\n');
+        } else {
+            l::warning("non-png found in tiles folder, skipping.");
+        }
+    }
+
+    // limit PNG images to 2 bytes cuz example files i used are around 100-200 bits
+    std::vector<uint16_t> tiles;
 
     // if scale is other than 1, rescale and render into file.
     // otherwise, simply render it into the file.
