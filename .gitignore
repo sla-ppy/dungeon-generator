@@ -1,5 +1,3 @@
-cmake-build-*
-
 *.user
 bin/
 # Prerequisites
@@ -39,12 +37,11 @@ bin/
 .idea/
 
 # make stuff
-
 Makefile
 ninja.build
 
 # cmake stuff
-
+cmake-build-*
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -58,9 +55,4 @@ CTestTestfile.cmake
 _deps
 
 # doxygen stuff
-
 docs/
-
-# output
-
-*.png
