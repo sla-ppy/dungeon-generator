@@ -91,26 +91,28 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
         }
     }
 
-    namespace fs = std::filesystem;
+    const std::string& path { "./assets/tiles/" };
+    std::vector<std::string> file_names = collect_file_names(path, ".png");
 
-    std::string tiles_path = "../assets/tiles/";
-    std::vector<std::string> filenames;
-    size_t files_amount { 0 };
-
-    // .png only file loader
-    for (auto& p : fs::directory_iterator(tiles_path)) {
-        if (fs::path(p).extension() == ".png") {
-            files_amount++;
-            filenames.push_back(fs::path(p).filename());
-            std::string loaded_file = fs::path(p).filename();
-            l::info("loading tiles: " + loaded_file, '\n');
+    int width { 16 };
+    int height { 16 };
+    int channels { 3 }; // RGB
+    int expected_channels { 3 };
+    std::vector<unsigned char*> textures;
+    for (const auto& file_name : file_names) {
+        unsigned char* img_data = stbi_load(file_name.c_str(), &width, &height, &channels, expected_channels);
+        if (!img_data) {
+            l::error("stbi_load() failed");
         } else {
-            l::warning("non-png found in tiles folder, skipping.");
+            textures.push_back(img_data);
         }
     }
 
-    // limit PNG images to 2 bytes cuz example files i used are around 100-200 bits
-    std::vector<uint16_t> tiles;
+    // free img data
+    for (const auto& texture : textures) {
+        stbi_image_free(texture);
+    }
+    textures.clear();
 
     // if scale is other than 1, rescale and render into file.
     // otherwise, simply render it into the file.
