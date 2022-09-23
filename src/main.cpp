@@ -15,6 +15,8 @@ int main() {
         return 1;
     }
 
+    // TODO: choose rendering mode :-D
+
     const std::string output_file = "output";
 
     err = render(grid, output_file, 10);

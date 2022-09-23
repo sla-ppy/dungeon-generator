@@ -2,9 +2,9 @@
 #include <boost/process/detail/child_decl.hpp>
 #include <boost/process/spawn.hpp>
 #include <chrono>
+#include <filesystem>
 #include <fmt/core.h>
 #include <vector>
-#include <filesystem>
 
 // set filter to box filter, which is sharp when integer-scaling
 // images later.
@@ -49,6 +49,17 @@ Color get_color_for_tile(Tile tile) {
         l::error("unhandled tile type in get_color_for_tile: {}", int(tile));
         return { 255, 0, 0 };
     }
+}
+
+std::vector<std::string> collect_file_names(const std::string& path, const std::string& extension = ".png") {
+    std::vector<std::string> filenames;
+    for (auto& p : std::filesystem::directory_iterator(path)) {
+        if (p.path().extension() == extension) {
+            filenames.push_back(p.path().filename());
+            std::string loaded_file = p.path().filename();
+        }
+    }
+    return filenames;
 }
 
 /**
