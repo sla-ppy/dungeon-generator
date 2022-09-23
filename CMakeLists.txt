@@ -14,7 +14,8 @@ set(DUN_GEN_SRCS
     src/Common.h
     src/Generation.h src/Generation.cpp
     src/Rendering.h src/Rendering.cpp
-    src/Log.h)
+    src/Log.h
+    src/STBImage.h src/STBImage.cpp)
 set(DUN_GEN_LIBS Boost::boost doctest fmt)
 set(DUN_GEN_INCLUDE_DIRS deps/stb)
 
