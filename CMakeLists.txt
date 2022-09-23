@@ -33,3 +33,9 @@ endif()
 add_executable(dun-gen-tests ${DUN_GEN_SRCS} tests/tests_main.cpp)
 target_link_libraries(dun-gen-tests ${DUN_GEN_LIBS})
 target_include_directories(dun-gen-tests PRIVATE ${DUN_GEN_INCLUDE_DIRS})
+
+add_custom_target(copy-assets ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/assets)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/assets
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets
+                                                    ${CMAKE_CURRENT_BINARY_DIR}/assets
+                   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets)
