@@ -1,3 +1,4 @@
+#include "STBImage.h"
 #include <boost/process.hpp>
 #include <boost/process/detail/child_decl.hpp>
 #include <boost/process/spawn.hpp>
@@ -77,8 +78,7 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
     }
 
     // an array of w*h RGB values, thus (w * h) * 3(bytes)
-    std::vector<uint8_t> img;
-    img.resize(grid.width() * grid.height() * 3);
+    STBImage img(grid.width(), grid.height(), 3);
 
     // maps each tile on the grid to a color, writes that color into the array
     for (size_t y = 0; y < grid.height(); ++y) {
@@ -86,7 +86,7 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
             const auto color = get_color_for_tile(grid[x][y]);
             // iterate through all 3 color channels: r, g, b.
             for (size_t c = 0; c < 3; ++c) {
-                img.at(x * grid.height() * 3 + y * 3 + c) = color[c];
+                img.at(x, y, c) = color[c];
             }
         }
     }
@@ -94,52 +94,22 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
     const std::string& path { "./assets/tiles/" };
     std::vector<std::string> file_names = collect_file_names(path, ".png");
 
-    int width { 16 };
-    int height { 16 };
-    int channels { 3 }; // RGB
-    int expected_channels { 3 };
-    std::vector<unsigned char*> textures;
+    const int channels { 3 }; // RGB
+    std::vector<STBImage> textures;
     for (const auto& file_name : file_names) {
-        unsigned char* img_data = stbi_load(file_name.c_str(), &width, &height, &channels, expected_channels);
-        if (!img_data) {
-            l::error("stbi_load() failed");
-        } else {
-            textures.push_back(img_data);
-        }
+        textures.push_back(STBImage(path + file_name, channels));
     }
-
-    // free img data
-    for (const auto& texture : textures) {
-        stbi_image_free(texture);
-    }
-    textures.clear();
 
     // if scale is other than 1, rescale and render into file.
     // otherwise, simply render it into the file.
     if (scale != 1) {
-        std::vector<uint8_t> scaled_img;
-        const size_t scaled_w = grid.width() * scale;
-        const size_t scaled_h = grid.height() * scale;
-        l::info("resizing input from {}x{} to {}x{} ({}x)", grid.width(), grid.height(), scaled_w, scaled_h, scale);
-        // each pixel takes `scale * scale` memory now
-        scaled_img.resize(scaled_w * scaled_h * 3);
-        // resize using stb_image, the filter is set in the top of the file
-        auto ret = stbir_resize_uint8(img.data(), grid.width(), grid.height(), 0,
-            scaled_img.data(), scaled_w, scaled_h, 0, 3);
-        if (ret == 0) {
-            return { fmt::format("failed to resize image with factor {}", scale) };
-        }
-        l::info("writing image to '{}.png'", filename);
-        ret = stbi_write_png(fmt::format("{}.png", filename).c_str(), scaled_w, scaled_h, 3, scaled_img.data(), 0);
-        if (ret == 0) {
-            return { "failed to write image" };
-        }
+        STBImage scaled = img.resized(grid.width() * scale, grid.height() * scale);
+        l::info("resized input from {}x{} to {}x{} ({}x)", grid.width(), grid.height(), scaled.w, scaled.h, scale);
+        l::info("writing scaled image to '{}.png'", filename);
+        scaled.write_to_file_png(filename);
     } else {
         l::info("writing image to '{}.png'", filename);
-        auto ret = stbi_write_png(fmt::format("{}.png", filename).c_str(), grid.width(), grid.height(), 3, img.data(), 0);
-        if (ret == 0) {
-            return { "failed to write image" };
-        }
+        img.write_to_file_png(filename);
     }
 
     l::info("opening image viewer", filename);
