@@ -37,7 +37,7 @@ using Color = std::array<uint8_t, CHANNELS>;
  * @brief Returns a color for the specified tile type, or
  * red for tile types which are unknown (this should never happen).
  */
-Color get_color_for_tile(Tile tile) {
+Color color_for_tile(Tile tile) {
     switch (tile) {
     case Tile::None:
         return { 0, 0, 0, 255 };
@@ -69,6 +69,44 @@ std::vector<std::string> collect_file_names(const std::string& path, const std::
 }
 
 /**
+ * @brief Returns a stringified texture name of a given tile.
+ */
+std::string texture_name_for_tile(Tile tile) {
+    switch (tile) {
+    case Tile::None:
+        return "none";
+    case Tile::Room:
+        return "none";
+    case Tile::Corridor:
+        return "none";
+    case Tile::Door:
+        return "door";
+    case Tile::NextToRoom:
+        return "wall";
+    case Tile::Corner:
+        return "wall";
+    default:
+        l::error("unhandled tile type in texture_name_for_tile: {}", int(tile));
+        return "none";
+    }
+}
+
+/**
+ * @brief Loads textures from a vector of filenames.
+ * @param base_path base path for each file, prepended
+ * @param filenames filenames to load
+ * @return map of file name *stems* to images
+ */
+std::unordered_map<std::string, STBImage> load_textures(const std::string& base_path, const std::vector<std::string>& filenames) {
+    std::unordered_map<std::string, STBImage> images;
+    for (const auto& filename : filenames) {
+        const auto filename_stem = std::filesystem::path(filename).stem().string();
+        images.emplace(filename_stem, STBImage(base_path + filename, CHANNELS));
+    }
+    return images;
+}
+
+/**
  * @brief Fills the given image according to the tile types in the grid.
  * Grid and image have to be the same size. Assuming CHANNELS color channels.
  * @param image image to fill
@@ -85,7 +123,7 @@ Error fill_image(STBImage& image, const Grid2D& grid) {
     // maps each tile on the grid to a color, writes that color into the array
     for (size_t y = 0; y < grid.height(); ++y) {
         for (size_t x = 0; x < grid.width(); ++x) {
-            const auto color = get_color_for_tile(grid[x][y]);
+            const auto color = color_for_tile(grid[x][y]);
             // iterate through all CHANNELS color channels: r, g, b.
             for (size_t c = 0; c < CHANNELS; ++c) {
                 image.at(x, y, c) = color[c];
@@ -131,27 +169,25 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale, bool
         }
     } else {
         const std::string& path { "./assets/tiles/" };
-        std::vector<std::string> file_names = collect_file_names(path, ".png");
+        std::vector<std::string> filenames = collect_file_names(path, ".png");
+        std::unordered_map<std::string, STBImage> textures = load_textures(path, filenames);
 
-        std::unordered_map<std::string, STBImage> textures;
-        for (const auto& file_name : file_names) {
-            textures.emplace(file_name, STBImage(path + file_name, CHANNELS).resized(scale, scale));
+        // resize textures
+        for (auto& name_texture_pair : textures) {
+            name_texture_pair.second = name_texture_pair.second.resized(scale, scale);
         }
-
-        const std::unordered_map<Tile, std::string> tile_texture_map {
-            { Tile::Door, "door.png" },
-            { Tile::Room, "none.png" },
-            { Tile::NextToRoom, "wall.png" },
-            { Tile::Corridor, "none.png" },
-            { Tile::None, "none.png" },
-        };
 
         // scale image to `scale`
         STBImage scaled(grid.width() * scale, grid.height() * scale, CHANNELS);
 
         for (size_t y = 0; y < grid.height(); ++y) {
             for (size_t x = 0; x < grid.width(); ++x) {
-                scaled.copy_from(textures.at(tile_texture_map.at(grid[x][y])), x * scale, y * scale);
+                const auto texture_name = texture_name_for_tile(grid[x][y]);
+                if (textures.find(texture_name) != textures.end()) {
+                    scaled.copy_from(textures.at(texture_name), x * scale, y * scale);
+                } else {
+                    l::error("no texture loaded for tile type {}", int(grid[x][y]));
+                }
             }
         }
 

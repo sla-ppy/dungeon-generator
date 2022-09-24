@@ -36,6 +36,7 @@ struct STBImage {
     STBImage(const STBImage&) = delete;
     // ensure moved-from object doesn't hold data
     STBImage(STBImage&& o) noexcept;
+    STBImage& operator=(STBImage&&) noexcept;
 
     /**
      * @brief Returns a copy of the image, resized to the desired `w x h`.
@@ -68,4 +69,6 @@ private:
     // decides whether to use delete[] or stb_image_free
     // in the destructor (DO NOT USE UNLESS IN resize())
     bool manually_allocated { false };
+    
+    void free_data();
 };

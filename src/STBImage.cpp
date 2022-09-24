@@ -13,6 +13,16 @@ STBImage::STBImage(const std::string& path, size_t channels)
     }
 }
 
+void STBImage::free_data() {
+    if (data) {
+        if (manually_allocated) {
+            delete[] data;
+        } else {
+            stbi_image_free(reinterpret_cast<void*>(data));
+        }
+    }
+}
+
 STBImage::STBImage(int w, int h, int c)
     : w(w)
     , h(h)
@@ -24,13 +34,7 @@ STBImage::STBImage(int w, int h, int c)
 }
 
 STBImage::~STBImage() noexcept {
-    if (data) {
-        if (manually_allocated) {
-            delete[] data;
-        } else {
-            stbi_image_free(reinterpret_cast<void*>(data));
-        }
-    }
+    free_data();
 }
 
 STBImage::STBImage(STBImage&& o) noexcept
@@ -42,6 +46,17 @@ STBImage::STBImage(STBImage&& o) noexcept
     // clear other's data to ensure no double-free or
     // use-after-free bugs
     o.data = nullptr;
+}
+
+STBImage& STBImage::operator=(STBImage&& o) noexcept {
+    free_data();
+    w = o.w;
+    h = o.h;
+    c = o.c;
+    data = o.data;
+    manually_allocated = o.manually_allocated;
+    o.data = nullptr;
+    return *this;
 }
 
 STBImage STBImage::resized(int new_w, int new_h) const {
