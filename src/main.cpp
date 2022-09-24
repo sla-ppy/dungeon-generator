@@ -6,10 +6,10 @@
 #include "Rendering.h"
 
 int main() {
-    Array2D<Tile, 20, 20> grid;
+    Grid2D grid;
     grid.fill(Tile::None);
 
-    auto err = generate(grid);
+    auto err = generate(grid, 5);
     if (err) {
         l::error("failed to generate: {}\n", err.msg);
         return 1;
