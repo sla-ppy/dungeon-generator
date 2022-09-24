@@ -88,8 +88,19 @@ Error generate(Grid2D& grid) {
         for (size_t y = starting_y; y < (starting_y + outer_size); ++y) {
             for (size_t x = starting_x; x < (starting_x + outer_size); ++x) {
                 if (grid[x][y] == Tile::NextToRoom && exact < expected) {
+                    // always have at least one door
+                    if (exact < 1) {
+                        grid[x][y] = Tile::Door;
+                        exact++;
+                    }
+
+                    // add more doors randomly, make sure there aren't another door nearby
                     size_t chance { Random::generate(1, 100) };
-                    if (chance < 10) {
+                    if (chance < 10
+                        && grid[x + 1][y] != Tile::Door
+                        && grid[x - 1][y] != Tile::Door
+                        && grid[x][y + 1] != Tile::Door
+                        && grid[x][y - 1] != Tile::Door) {
                         grid[x][y] = Tile::Door;
                         exact++;
                     }
