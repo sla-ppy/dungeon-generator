@@ -44,12 +44,14 @@ struct STBImage {
      * @param new_h desired new height of the image
      * @return new image, with its own allocated memory
      */
-    STBImage resized(int new_w, int new_h);
+    STBImage resized(int new_w, int new_h) const;
+
+    void copy_from(STBImage& from, int to_x, int to_y);
 
     uint8_t& at(int x, int y, int c_i);
-    const uint8_t& at(int x, int y, int c_i) const;
-    
-    void write_to_file_png(std::string_view filename);
+    uint8_t at(int x, int y, int c_i) const;
+
+    void write_to_file_png(const std::string& filename);
 
     // width
     int w { 0 };

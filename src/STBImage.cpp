@@ -36,33 +36,45 @@ STBImage::~STBImage() noexcept {
 STBImage::STBImage(STBImage&& o) noexcept
     : w(o.w)
     , h(o.h)
-    , c(o.h)
+    , c(o.c)
     , data(o.data) {
     // clear other's data to ensure no double-free or
     // use-after-free bugs
     o.data = nullptr;
 }
 
-STBImage STBImage::resized(int new_w, int new_h) {
+STBImage STBImage::resized(int new_w, int new_h) const {
     STBImage img(new_w, new_h, c);
-    auto ret = stbir_resize_uint8_generic(data, w, h, 0, img.data, new_w, new_h, 0, c,
-        STBIR_ALPHA_CHANNEL_NONE, 0, STBIR_EDGE_CLAMP, STBIR_FILTER_BOX, STBIR_COLORSPACE_LINEAR, nullptr);
+    /*auto ret = stbir_resize_uint8_generic(data, w, h, 0, img.data, new_w, new_h, 0, c,
+        STBIR_ALPHA_CHANNEL_NONE, 0, STBIR_EDGE_CLAMP, STBIR_FILTER_BOX, STBIR_COLORSPACE_LINEAR, nullptr);*/
+    auto ret = stbir_resize_uint8(data, w, h, 0, img.data, new_w, new_h, 0, c);
     if (ret == 0) {
         throw std::runtime_error(fmt::format("resizing image from {}x{} to {}x{} failed", w, h, img.w, img.h));
     }
     return img;
 }
 
+void STBImage::copy_from(STBImage& from, int to_x, int to_y) {
+    for (int x = 0; x < from.w; ++x) {
+        for (int y = 0; y < from.h; ++y) {
+            for (int ci = 0; ci < c; ++ci) {
+                at(to_x + x, to_y + y, ci) = from.at(x, y, ci);
+            }
+        }
+    }
+}
+
 uint8_t& STBImage::at(int x, int y, int c_i) {
     return data[x * h * c + y * c + c_i];
 }
 
-const uint8_t& STBImage::at(int x, int y, int c_i) const {
+uint8_t STBImage::at(int x, int y, int c_i) const {
     return data[x * h * c + y * c + c_i];
 }
 
-void STBImage::write_to_file_png(std::string_view filename) {
-    const auto ret = stbi_write_png(fmt::format("{}.png", filename).c_str(), w, h, c, data, 0);
+void STBImage::write_to_file_png(const std::string& filename) {
+    const std::string full_name = filename + ".png";
+    const auto ret = stbi_write_png(full_name.c_str(), w, h, c, data, 0);
     if (ret == 0) {
         throw std::runtime_error(fmt::format("failed to write image to '{}.png'", filename));
     }

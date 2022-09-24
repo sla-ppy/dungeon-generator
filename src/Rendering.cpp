@@ -1,3 +1,4 @@
+#include "Common.h"
 #include "STBImage.h"
 #include <boost/process.hpp>
 #include <boost/process/detail/child_decl.hpp>
@@ -25,10 +26,12 @@
 #include "Log.h"
 #include "Rendering.h"
 
+#define CHANNELS 4
+
 /**
- * An 8-bit RGB color type. Order: [r, g, b].
+ * An 8-bit RGB color type.
  */
-using Color = std::array<uint8_t, 3>;
+using Color = std::array<uint8_t, CHANNELS>;
 
 /**
  * @brief Returns a color for the specified tile type, or
@@ -37,18 +40,18 @@ using Color = std::array<uint8_t, 3>;
 Color get_color_for_tile(Tile tile) {
     switch (tile) {
     case Tile::None:
-        return { 0, 0, 0 };
+        return { 0, 0, 0, 255 };
     case Tile::Room:
-        return { 64, 64, 255 };
+        return { 64, 64, 255, 255 };
     case Tile::Corridor:
-        return { 128, 128, 128 };
+        return { 128, 128, 128, 255 };
     case Tile::Door:
-        return { 0, 255, 0 };
+        return { 0, 255, 0, 255 };
     case Tile::NextToRoom:
-        return { 255, 165, 0 };
+        return { 255, 165, 0, 255 };
     default:
         l::error("unhandled tile type in get_color_for_tile: {}", int(tile));
-        return { 255, 0, 0 };
+        return { 255, 0, 0, 255 };
     }
 }
 
@@ -64,6 +67,33 @@ std::vector<std::string> collect_file_names(const std::string& path, const std::
 }
 
 /**
+ * @brief Fills the given image according to the tile types in the grid.
+ * Grid and image have to be the same size. Assuming CHANNELS color channels.
+ * @param image image to fill
+ * @param grid grid to take tile info from
+ * @return error if something went wrong
+ */
+Error fill_image(STBImage& image, const Grid2D& grid) {
+    if (size_t(image.w) != grid.width()) {
+        return { "image width != grid width" };
+    }
+    if (size_t(image.h) != grid.height()) {
+        return { "image witdh != grid height" };
+    }
+    // maps each tile on the grid to a color, writes that color into the array
+    for (size_t y = 0; y < grid.height(); ++y) {
+        for (size_t x = 0; x < grid.width(); ++x) {
+            const auto color = get_color_for_tile(grid[x][y]);
+            // iterate through all CHANNELS color channels: r, g, b.
+            for (size_t c = 0; c < CHANNELS; ++c) {
+                image.at(x, y, c) = color[c];
+            }
+        }
+    }
+    return {};
+}
+
+/**
  * @brief Renders the grid into a PNG file.
  * @param grid Grid to render.
  * @param filename Filename or path with filename to write to, without extension.
@@ -71,54 +101,64 @@ std::vector<std::string> collect_file_names(const std::string& path, const std::
  * each grid pixel becomes a 2x2 pixel area in the image.
  * @return An error if anything went wrong, explaining the issue in the message field.
  */
-Error render(const Grid2D& grid, const std::string& filename, size_t scale) {
+Error render(const Grid2D& grid, const std::string& filename, size_t scale, bool use_textures) {
     if (scale < 1) {
         l::error("render scale must be >= 1, got {}", scale);
         return { "invalid render scale" };
     }
 
-    // an array of w*h RGB values, thus (w * h) * 3(bytes)
-    STBImage img(grid.width(), grid.height(), 3);
+    if (!use_textures) {
+        // an array of w*h RGB values, thus (w * h) * CHANNELS(bytes)
+        STBImage img(grid.width(), grid.height(), CHANNELS);
 
-    // maps each tile on the grid to a color, writes that color into the array
-    for (size_t y = 0; y < grid.height(); ++y) {
-        for (size_t x = 0; x < grid.width(); ++x) {
-            const auto color = get_color_for_tile(grid[x][y]);
-            // iterate through all 3 color channels: r, g, b.
-            for (size_t c = 0; c < 3; ++c) {
-                img.at(x, y, c) = color[c];
+        auto error = fill_image(img, grid);
+        if (error) {
+            return { fmt::format("failed to fill image from grid: {}", error.msg) };
+        }
+
+        // if scale is other than 1, rescale and render into file.
+        // otherwise, simply render it into the file.
+        if (scale != 1) {
+            STBImage scaled = img.resized(grid.width() * scale, grid.height() * scale);
+            l::info("resized input from {}x{} to {}x{} ({}x)", grid.width(), grid.height(), scaled.w, scaled.h, scale);
+            l::info("writing scaled image to '{}.png'", filename);
+            scaled.write_to_file_png(filename);
+        } else {
+            l::info("writing image to '{}.png'", filename);
+            img.write_to_file_png(filename);
+        }
+    } else {
+        const std::string& path { "./assets/tiles/" };
+        std::vector<std::string> file_names = collect_file_names(path, ".png");
+
+        std::unordered_map<std::string, STBImage> textures;
+        for (const auto& file_name : file_names) {
+            textures.emplace(file_name, STBImage(path + file_name, CHANNELS));
+        }
+
+        const std::unordered_map<Tile, std::string> tile_texture_map {
+            { Tile::Door, "door.png" },
+            { Tile::Room, "none.png" },
+            { Tile::NextToRoom, "wall.png" },
+            { Tile::Corridor, "none.png" },
+            { Tile::None, "none.png" },
+        };
+        
+        // scale image to `scale`
+        STBImage scaled(grid.width() * scale, grid.height() * scale, CHANNELS);
+
+        for (size_t y = 0; y < grid.height(); ++y) {
+            for (size_t x = 0; x < grid.width(); ++x) {
+                scaled.copy_from(textures.at(tile_texture_map.at(grid[x][y])), x * scale, y * scale);
             }
         }
-    }
 
-    const std::string& path { "./assets/tiles/" };
-    std::vector<std::string> file_names = collect_file_names(path, ".png");
-
-    const int channels { 3 }; // RGB
-    std::vector<STBImage> textures;
-    for (const auto& file_name : file_names) {
-        textures.push_back(STBImage(path + file_name, channels));
-    }
-
-    // if scale is other than 1, rescale and render into file.
-    // otherwise, simply render it into the file.
-    if (scale != 1) {
-        STBImage scaled = img.resized(grid.width() * scale, grid.height() * scale);
-        l::info("resized input from {}x{} to {}x{} ({}x)", grid.width(), grid.height(), scaled.w, scaled.h, scale);
-        l::info("writing scaled image to '{}.png'", filename);
         scaled.write_to_file_png(filename);
-    } else {
-        l::info("writing image to '{}.png'", filename);
-        img.write_to_file_png(filename);
     }
 
     l::info("opening image viewer", filename);
 
-    auto child = boost::process::child(fmt::format("xdg-open {}.png", filename),
-        boost::process::std_in.close(),
-        boost::process::std_out > boost::process::null,
-        boost::process::std_err > boost::process::null);
-    child.join();
+    spawn_process_silently(fmt::format("xdg-open {}.png", filename));
 
     return {};
 }

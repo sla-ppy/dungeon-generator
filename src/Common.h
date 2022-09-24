@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <string>
 
+#include <boost/process.hpp>
+
 /**
  * A 2D fixed-size array.
  */
@@ -43,3 +45,11 @@ struct Error {
         , msg(msg) {
     }
 };
+
+static inline void spawn_process_silently(const std::string& command) {
+    auto child = boost::process::child(command,
+        boost::process::std_in.close(),
+        boost::process::std_out > boost::process::null,
+        boost::process::std_err > boost::process::null);
+    child.join();
+}
