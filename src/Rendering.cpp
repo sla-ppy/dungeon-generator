@@ -50,7 +50,7 @@ Color get_color_for_tile(Tile tile) {
     case Tile::NextToRoom:
         return { 255, 165, 0, 255 };
     case Tile::Corner:
-        return { 128, 0, 128 };
+        return { 128, 0, 128, 255 };
     default:
         l::error("unhandled tile type in get_color_for_tile: {}", int(tile));
         return { 255, 0, 0, 255 };
