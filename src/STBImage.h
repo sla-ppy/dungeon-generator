@@ -19,7 +19,7 @@ struct STBImage {
      * @param path path to image
      * @param channels number of channels (examples: 3=RGB, 4=RGBA)
      */
-    STBImage(std::string_view path, size_t channels);
+    STBImage(const std::string& path, size_t channels);
     /**
      * @brief Creates an image of `w x h` pixels with `c` channels.
      * @param w width

@@ -135,7 +135,7 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale, bool
 
         std::unordered_map<std::string, STBImage> textures;
         for (const auto& file_name : file_names) {
-            textures.emplace(file_name, STBImage(path + file_name, CHANNELS));
+            textures.emplace(file_name, STBImage(path + file_name, CHANNELS).resized(scale, scale));
         }
 
         const std::unordered_map<Tile, std::string> tile_texture_map {
@@ -145,7 +145,7 @@ Error render(const Grid2D& grid, const std::string& filename, size_t scale, bool
             { Tile::Corridor, "none.png" },
             { Tile::None, "none.png" },
         };
-        
+
         // scale image to `scale`
         STBImage scaled(grid.width() * scale, grid.height() * scale, CHANNELS);
 

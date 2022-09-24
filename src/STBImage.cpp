@@ -6,7 +6,7 @@
 #include <stb_image_write.h>
 #include <stdexcept>
 
-STBImage::STBImage(std::string_view path, size_t channels)
+STBImage::STBImage(const std::string& path, size_t channels)
     : data { stbi_load(path.data(), &w, &h, &c, channels) } {
     if (!data) {
         throw std::runtime_error(fmt::format("stbi_load({}, ...) failed", path));
@@ -37,7 +37,8 @@ STBImage::STBImage(STBImage&& o) noexcept
     : w(o.w)
     , h(o.h)
     , c(o.c)
-    , data(o.data) {
+    , data(o.data)
+    , manually_allocated(o.manually_allocated) {
     // clear other's data to ensure no double-free or
     // use-after-free bugs
     o.data = nullptr;

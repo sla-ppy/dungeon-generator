@@ -16,7 +16,7 @@ set(DUN_GEN_SRCS
     src/Rendering.h src/Rendering.cpp
     src/Log.h
     src/STBImage.h src/STBImage.cpp)
-set(DUN_GEN_LIBS Boost::boost doctest fmt)
+set(DUN_GEN_LIBS Boost::boost doctest fmt asan)
 set(DUN_GEN_INCLUDE_DIRS deps/stb)
 
 add_executable(dun-gen ${DUN_GEN_SRCS} src/main.cpp)
