@@ -109,5 +109,39 @@ Error generate(Grid2D& grid) {
         }
     }
 
+    size_t room_size { Random::generate(2, 4) };
+
+    size_t corridor_start_x;
+    size_t corridor_start_y;
+
+    // attempt placing corridor start
+    bool generating{true};
+    size_t failed_attempts { 0 };
+    while (generating && failed_attempts < 50) {
+        corridor_start_x = Random::generate(1, (grid.width() - room_size - 1));
+        corridor_start_y = Random::generate(1, (grid.height() - room_size - 1));
+
+        bool failed { false };
+        for (size_t y = corridor_start_y - 1; y < corridor_start_y + 1; y++) {
+            for (size_t x = corridor_start_x - 1; x < corridor_start_x + 1; x++) {
+                if (failed) {
+                    break;
+                }
+                if (grid[x][y] != Tile::None) {
+                    failed = true;
+                    failed_attempts++;
+                }
+
+                grid[x][y] = Tile::Corridor;
+            }
+            if (failed) {
+                break;
+            }
+        }
+        if (!failed) {
+            generating = false;
+        }
+    }
+    
     return {};
 }
