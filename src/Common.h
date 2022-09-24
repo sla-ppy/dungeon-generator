@@ -29,6 +29,7 @@ enum class Tile {
     Corridor,
     Door,
     NextToRoom,
+    Corner,
 };
 
 using Grid2D = Array2D<Tile, 20, 20>;

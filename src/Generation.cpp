@@ -12,9 +12,10 @@ size_t generate(size_t min, size_t max) {
 }
 
 Error generate(Grid2D& grid) {
-    // TODO: fix doors spawning on corners
     // TODO: create corridors
     // TODO: link corridors with doors by grouping them
+    // TODO: add rectangle room shapes
+    // TODO: challenge for circle, hexagon rooms https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
     for (int i = 0; i < 5; ++i) {
         size_t room_size { Random::generate(2, 4) };
@@ -23,6 +24,7 @@ Error generate(Grid2D& grid) {
         size_t pos_y;
         bool generating { true };
         size_t failed_attempts { 0 };
+        // check if room has enough space to be put down
         while (generating && failed_attempts < 50) {
             pos_x = Random::generate(1, (grid.width() - room_size - 1)); // rand room pos - check in bounds
             pos_y = Random::generate(1, (grid.height() - room_size - 1));
@@ -53,15 +55,31 @@ Error generate(Grid2D& grid) {
         size_t starting_y = pos_y - 1;
         size_t outer_size = room_size + 2;
 
+        // set nexttoroom tiles
         for (size_t y = starting_y; y < starting_y + outer_size; ++y) {
             for (size_t x = starting_x; x < starting_x + outer_size; ++x) {
                 grid[x][y] = Tile::NextToRoom;
             }
         }
 
+        // set room tiles
         for (size_t y = pos_y; y < (pos_y + room_size); ++y) {
             for (size_t x = pos_x; x < (pos_x + room_size); ++x) {
                 grid[x][y] = Tile::Room;
+            }
+        }
+
+        for (size_t y = starting_y; y < (starting_y + outer_size); ++y) {
+            for (size_t x = starting_x; x < (starting_x + outer_size); ++x) {
+                if (x == starting_x && y == starting_y) {
+                    grid[x][y] = Tile::Corner; // TOP-LEFT
+                } else if (x == starting_x && y == (starting_y + outer_size) - 1) {
+                    grid[x][y] = Tile::Corner; // TOP-RIGHT
+                } else if (x == (starting_x + outer_size) - 1 && y == starting_y) {
+                    grid[x][y] = Tile::Corner; // TOP-RIGHT
+                } else if (x == (starting_x + outer_size) - 1 && y == (starting_y + outer_size) - 1) {
+                    grid[x][y] = Tile::Corner; // BOTTOM-RIGHT
+                }
             }
         }
 
