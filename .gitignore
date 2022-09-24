@@ -56,3 +56,5 @@ _deps
 
 # doxygen stuff
 docs/
+
+output.png
