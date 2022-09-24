@@ -118,7 +118,7 @@ Error fill_image(STBImage& image, const Grid2D& grid) {
         return { "image width != grid width" };
     }
     if (size_t(image.h) != grid.height()) {
-        return { "image witdh != grid height" };
+        return { "image width != grid height" };
     }
     // maps each tile on the grid to a color, writes that color into the array
     for (size_t y = 0; y < grid.height(); ++y) {
