@@ -76,15 +76,15 @@ std::string texture_name_for_tile(Tile tile) {
     case Tile::None:
         return "none";
     case Tile::Room:
-        return "none";
+        return "room";
     case Tile::Corridor:
-        return "none";
+        return "corridor";
     case Tile::Door:
         return "door";
     case Tile::NextToRoom:
         return "wall";
     case Tile::Corner:
-        return "wall";
+        return "bottom_right_corner";
     default:
         l::error("unhandled tile type in texture_name_for_tile: {}", int(tile));
         return "none";
