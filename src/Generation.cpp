@@ -62,9 +62,6 @@ void generate_random_tile(Grid2D& grid, size_t start_x, size_t start_y, size_t w
 }
 
 void generate_doors(Grid2D& grid, size_t start_x, size_t start_y, size_t w, size_t h, Tile tile) {
-    size_t exact { 0 };
-    size_t expected { Random::generate(1, 3) };
-
     /*
      * pick a wall to generate the guaranteed first door in
      *   3   1
@@ -141,7 +138,16 @@ Error generate(Grid2D& grid, size_t n_rooms) {
         fill_area(grid, wall_x, wall_y, wall_length, wall_length, Tile::NextToRoom);
         fill_area(grid, room_x, room_y, room_size, room_size, Tile::Room);
         fill_corners(grid, wall_x, wall_y, wall_length, wall_length, Tile::Corner);
-        generate_doors(grid, wall_x, wall_y, wall_length, wall_length, Tile::Door);
+
+        size_t exact { 0 };
+        size_t expected { Random::generate(1, 3) };
+
+        // FIXME: doors are spawning on corners
+        while(exact < expected) {
+            generate_doors(grid, wall_x, wall_y, wall_length, wall_length, Tile::Door);
+            exact++;
+        }
+
     }
 
     size_t room_size { Random::generate(2, 4) };
